@@ -32,6 +32,6 @@ Clojure HTTP client using only java.net
 ;;   :url "https://google.com"
 ;;   :status 200
 ;;   :headers {:status 200 :content-type "text/html; charset=ISO-8859-1" ...}
-;;   :version 1.1}
+;;   :version 2}
 
 ```

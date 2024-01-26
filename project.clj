@@ -1,4 +1,4 @@
-(defproject com.github.paytonward6/http-tool "0.1.1"
+(defproject com.github.paytonward6/http-tool "0.1.2"
   :description "Clojure HTTP client using only java.net"
   :url "https://github.com/paytonward6/http-tool"
   :license {:name "MIT"

@@ -1,9 +1,8 @@
 (ns http-tool.core
   (:gen-class)
   (:require [clojure.string :as str])
-  (:import (java.net.http HttpRequest HttpClient HttpClient$Redirect HttpHeaders)
-           (java.net URI)
-           (java.net.http HttpResponse HttpResponse$BodyHandlers)))
+  (:import (java.net.http HttpRequest HttpClient HttpClient$Version HttpClient$Redirect HttpHeaders HttpResponse HttpResponse$BodyHandlers)
+           (java.net URI)))
 
 
 (defn req ^HttpRequest [^String url]
@@ -44,5 +43,9 @@
    :url (.. resp uri toString)
    :status (. resp statusCode)
    :headers (parse-headers (.. resp headers map))
-   :version (. resp version)})
+   :version (let [version (.. resp version)
+                  _ (println version)]
+              (condp = version
+                HttpClient$Version/HTTP_1_1 1.1
+                HttpClient$Version/HTTP_2 2))})
 
