@@ -5,6 +5,26 @@
            (java.net URI)))
 
 
+(defn truthy-key [h1 h2]
+  (map last (filter #((first %) h1) h2)))
+
+
+(def funcs {:one '(.add 1) :two '(.add 2) :three '(.add 3)})
+
+;;(defmacro do-pairs [obj vals]
+;;  (let [to-call (truthy-key vals funcs)]
+;;    `(doto ~obj
+;;       ~@to-call)))
+
+(defmacro do-pairs [obj vals]
+  (let [to-call (truthy-key vals funcs)]
+    `(doto ~obj
+       ~@to-call)))
+
+(macroexpand-1 '(do-pairs (java.util.ArrayList.) {:two true :one true}))
+
+(do-pairs (java.util.ArrayList.) {:two true :one true})
+
 (defn req ^HttpRequest [^String url]
   (-> (HttpRequest/newBuilder)
       (.uri (URI. url))
@@ -20,8 +40,9 @@
   (^HttpResponse [^HttpClient c ^HttpRequest req] (send-req c req {}))
   ([^HttpClient client
     ^HttpRequest req
-    ^clojure.lang.PersistentHashMap {async :async}]
-   (let [response (if async
+    ^clojure.lang.PersistentHashMap [& {:keys [async] :as opts}]]
+   (let [_ (println opts " :async" async)
+         response (if async
                     (-> client
                         (.sendAsync req (HttpResponse$BodyHandlers/ofString))
                         (.get))
