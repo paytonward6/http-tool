@@ -16,14 +16,17 @@
 ;;    `(doto ~obj
 ;;       ~@to-call)))
 
-(defmacro do-pairs [obj vals]
-  (let [to-call (truthy-key vals funcs)]
-    `(doto ~obj
-       ~@to-call)))
+(defmacro do-list [obj calls]
+     (concat `(doto ~obj) (eval calls)))
 
-(macroexpand-1 '(do-pairs (java.util.ArrayList.) {:two true :one true}))
+(defn ret-list [] '((.add 1) (.add 2)))
 
-(do-pairs (java.util.ArrayList.) {:two true :one true})
+(do-list (java.util.ArrayList.) (truthy-key {:two true :one true} funcs))
+
+(macroexpand-1 '(do-list (java.util.ArrayList.) (ret-list)))
+
+(do-list (java.util.ArrayList.) (ret-list))
+(do-list (java.util.ArrayList.) '((.add 1) (.add 2)))
 
 (defn req ^HttpRequest [^String url]
   (-> (HttpRequest/newBuilder)
