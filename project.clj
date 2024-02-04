@@ -7,6 +7,7 @@
                  [org.clojure/data.json "2.5.0"]
                  [org.clojure/core.async "1.6.673"]
                  [org.clojure/data.json "2.5.0"]]
+  ;;:main "http-tool.core"
   :profiles {:uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}
              :dev {:dependencies [[nrepl "1.1.0"]

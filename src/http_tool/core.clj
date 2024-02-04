@@ -5,28 +5,33 @@
            (java.net URI)))
 
 
-(defn truthy-key [h1 h2]
-  (map last (filter #((first %) h1) h2)))
+(defn http-enum->version [v]
+  (condp = v
+    HttpClient$Version/HTTP_1_1 1.1
+    HttpClient$Version/HTTP_2 2))
 
+(defn version->http-enum [v]
+  (cond
+    (= 1.1 v) HttpClient$Version/HTTP_1_1
+    (or (= 2 v) (= 2.0 v)) HttpClient$Version/HTTP_2))
 
-(def funcs {:one '(.add 1) :two '(.add 2) :three '(.add 3)})
+(defn add-headers [req-builder headers]
+  (doseq [[k v] headers]
+    (.header req-builder (name k) (str v)))
+  req-builder)
 
-;;(defmacro do-pairs [obj vals]
-;;  (let [to-call (truthy-key vals funcs)]
-;;    `(doto ~obj
-;;       ~@to-call)))
+;;(defn add-query [req-builder headers])
 
-(defmacro do-list [obj calls]
-     (concat `(doto ~obj) (eval calls)))
+(defn build-req [url & {:keys [version headers]}]
+  (let [c (doto (HttpRequest/newBuilder)
+            (.uri (URI. url))
+            (.GET))]
+    (cond-> c
+      version (.version (version->http-enum version))
+      headers (add-headers headers))
+    (.build c)))
 
-(defn ret-list [] '((.add 1) (.add 2)))
-
-(do-list (java.util.ArrayList.) (truthy-key {:two true :one true} funcs))
-
-(macroexpand-1 '(do-list (java.util.ArrayList.) (ret-list)))
-
-(do-list (java.util.ArrayList.) (ret-list))
-(do-list (java.util.ArrayList.) '((.add 1) (.add 2)))
+;;(.headers (build-req "https://google.com" :headers {:authorization "this" :this__n 2} :version 1.1))
 
 (defn req ^HttpRequest [^String url]
   (-> (HttpRequest/newBuilder)
@@ -67,9 +72,5 @@
    :url (.. resp uri toString)
    :status (. resp statusCode)
    :headers (parse-headers (.. resp headers map))
-   :version (let [version (.. resp version)
-                  _ (println version)]
-              (condp = version
-                HttpClient$Version/HTTP_1_1 1.1
-                HttpClient$Version/HTTP_2 2))})
+   :version (http-enum->version (.. resp version))})
 
