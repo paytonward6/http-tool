@@ -5,6 +5,34 @@
            (java.net URI)))
 
 
+(defn http-enum->version [v]
+  (condp = v
+    HttpClient$Version/HTTP_1_1 1.1
+    HttpClient$Version/HTTP_2 2))
+
+(defn version->http-enum [v]
+  (cond
+    (= 1.1 v) HttpClient$Version/HTTP_1_1
+    (or (= 2 v) (= 2.0 v)) HttpClient$Version/HTTP_2))
+
+(defn add-headers [req-builder headers]
+  (doseq [[k v] headers]
+    (.header req-builder (name k) (str v)))
+  req-builder)
+
+;;(defn add-query [req-builder headers])
+
+(defn build-req [url & {:keys [version headers]}]
+  (let [c (doto (HttpRequest/newBuilder)
+            (.uri (URI. url))
+            (.GET))]
+    (cond-> c
+      version (.version (version->http-enum version))
+      headers (add-headers headers))
+    (.build c)))
+
+;;(.headers (build-req "https://google.com" :headers {:authorization "this" :this__n 2} :version 1.1))
+
 (defn req ^HttpRequest [^String url]
   (-> (HttpRequest/newBuilder)
       (.uri (URI. url))
@@ -20,8 +48,9 @@
   (^HttpResponse [^HttpClient c ^HttpRequest req] (send-req c req {}))
   ([^HttpClient client
     ^HttpRequest req
-    ^clojure.lang.PersistentHashMap {async :async}]
-   (let [response (if async
+    ^clojure.lang.PersistentHashMap [& {:keys [async] :as opts}]]
+   (let [_ (println opts " :async" async)
+         response (if async
                     (-> client
                         (.sendAsync req (HttpResponse$BodyHandlers/ofString))
                         (.get))
@@ -43,9 +72,5 @@
    :url (.. resp uri toString)
    :status (. resp statusCode)
    :headers (parse-headers (.. resp headers map))
-   :version (let [version (.. resp version)
-                  _ (println version)]
-              (condp = version
-                HttpClient$Version/HTTP_1_1 1.1
-                HttpClient$Version/HTTP_2 2))})
+   :version (http-enum->version (.. resp version))})
 
